@@ -4,10 +4,8 @@ import { Response } from 'express';
 
 /**
  * ExceptionFilter to attach to routes using Prisma.
- * Will handle `PrismaClientKnownRequestError` such as unique constraint validation and provide
- * a helpful message.
- * Will also catch `PrismaClientValidationError` but you should ideally have your own validation instead of
- * falling back on this.
+ * Will catch `PrismaClientKnownRequestError` such as unique constraint validation and provide a helpful message.
+ * Will catch `PrismaClientValidationError` but you should ideally have your own validation instead of falling back on this.
  */
 @Catch(Prisma.PrismaClientKnownRequestError, Prisma.PrismaClientValidationError)
 export class PrismaExceptionFilter implements ExceptionFilter {
