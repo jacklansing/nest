@@ -1,13 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
 import * as argon2 from 'argon2';
+import { ResetTokenService } from './reset-token.service';
+import { User } from '.prisma/client';
+import { ResetToken } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private resetTokenService: ResetTokenService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -25,10 +29,60 @@ export class AuthService {
     return argon2.verify(hashedPassword, password);
   }
 
-  async login(user: any) {
+  async login(user: User) {
     const payload = { email: user.email, sub: user.id };
     return {
       access_token: this.jwtService.sign(payload),
     };
+  }
+
+  async forgotPassword(userEmail: string) {
+    const user = await this.usersService.user({ email: userEmail });
+    if (user) {
+      return this.resetTokenService.createToken(user);
+    }
+  }
+
+  async resetPassword(resetToken: string, newPassword: string) {
+    const token = await this.resetTokenService.token({ resetToken });
+    const user = await this.usersService.user({ id: token.userId });
+    this.throwBadRequestOnNullTokenOrUser(token, user);
+    this.checkTokenValidity(token, user);
+    await this.updateUserWithNewPassword(newPassword, token);
+    return true;
+  }
+
+  private async updateUserWithNewPassword(
+    newPassword: string,
+    token: ResetToken,
+  ) {
+    const newPasswordHash = await this.usersService.hashPassword(newPassword);
+    await this.usersService.updateUser({
+      where: { id: token.userId },
+      data: { password: newPasswordHash },
+    });
+
+    await this.resetTokenService.updateToken({
+      where: {
+        resetToken: token.resetToken,
+      },
+      data: {
+        wasUsed: true,
+      },
+    });
+  }
+
+  private throwBadRequestOnNullTokenOrUser(token: ResetToken, user: User) {
+    if (token == null || user == null)
+      throw new BadRequestException('token is expired or invalid');
+  }
+
+  private checkTokenValidity(token: ResetToken, user: User) {
+    if (
+      token.createdAt < user.updatedAt ||
+      token.expiresAt < new Date() ||
+      token.wasUsed
+    )
+      throw new BadRequestException('token has expired');
   }
 }

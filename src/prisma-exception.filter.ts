@@ -1,5 +1,5 @@
 import { Prisma } from '.prisma/client';
-import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, Logger } from '@nestjs/common';
 import { Response } from 'express';
 
 /**
@@ -18,7 +18,7 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const responseData = this.formResponse(exception);
-
+    Logger.error(exception);
     response.status(responseData.statusCode).json(responseData);
   }
 
