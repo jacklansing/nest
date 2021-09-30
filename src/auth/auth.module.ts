@@ -10,7 +10,7 @@ import { AuthController } from './auth.controller';
 import { ResetTokenService } from './reset-token.service';
 import { PrismaService } from 'src/prisma.service';
 import { MailModule } from 'src/mail/mail.module';
-import { RouterModule } from '@nestjs/core';
+import { GoogleStrategy } from './google.strategy';
 
 @Module({
   imports: [
@@ -27,6 +27,7 @@ import { RouterModule } from '@nestjs/core';
     AuthService,
     LocalStrategy,
     JwtStrategy,
+    GoogleStrategy,
     ResetTokenService,
   ],
   exports: [AuthService],

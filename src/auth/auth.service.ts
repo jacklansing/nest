@@ -14,6 +14,13 @@ export class AuthService {
     private resetTokenService: ResetTokenService,
   ) {}
 
+  async googleLogin(user: User) {
+    if (user) {
+      return this.login(user);
+    } else
+      throw new BadRequestException('no user provided during google login');
+  }
+
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.user({ email });
     if (!user) return null;
