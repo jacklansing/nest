@@ -11,14 +11,15 @@ generator client {
 }
 
 model User {
-  id          String       @id @default(uuid())
-  firstName   String
-  lastName    String
-  email       String       @unique
-  password    String
-  resetTokens ResetToken[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id           String        @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String        @unique
+  password     String
+  resetTokens  ResetToken[]
+  subscription Subscription?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 model ResetToken {
@@ -28,4 +29,21 @@ model ResetToken {
   wasUsed    Boolean  @default(false)
   expiresAt  DateTime
   createdAt  DateTime @default(now())
+}
+
+model Subscription {
+  id                 String  @id @default(cuid())
+  user               User    @relation(fields: [userId], references: [id])
+  userId             String
+  customerId         String
+  productId          String
+  priceId            String
+  type               String
+  status             String
+  billingCycleAnchor Int
+  currentPeriodEnd   Int
+  cancelAtPeriodEnd  Boolean @default(false)
+  cardLastFour       Int?
+  cardExpMonth       Int?
+  cardExpYear        Int?
 }
